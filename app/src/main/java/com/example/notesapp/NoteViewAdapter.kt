@@ -52,4 +52,10 @@ class NoteViewAdapter(
         notes = newNotes
         notifyDataSetChanged()
     }
+
+    fun getNote(position: Int) : Note {
+        val id = notes[position].id
+        val note = db.getNoteById(id)
+        return note
+    }
 }

@@ -60,4 +60,32 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, n
         db.delete(TABLE_NAME, "$COLUMN_ID = ?", arrayOf(id.toString()))
         db.close()
     }
+
+    fun getNoteById(noteId: Int) : Note{
+        val db = readableDatabase
+        var note = Note(0, "", "")
+        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_ID = ?"
+        db.rawQuery(query, arrayOf(noteId.toString())).use { cursor ->
+            if (cursor.moveToFirst()) {
+                val title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))
+                val content = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                note = Note(id, title, content)
+            }
+        }
+        db.close()
+        return note
+    }
+
+    fun updateNote(note: Note) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_TITLE, note.title)
+            put(COLUMN_CONTENT, note.content)
+        }
+        val whereClause = "$COLUMN_ID = ?"
+        val whereArgs = arrayOf(note.id.toString())
+        db.update(TABLE_NAME, values , whereClause, whereArgs)
+        db.close()
+    }
 }
