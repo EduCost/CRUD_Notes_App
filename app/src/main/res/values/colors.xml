@@ -2,11 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primary_color">#3F51B5</color>
-    <color name="dark_primary_color">#303F9F</color>
+    <color name="primary_color">#4758BD</color>
+    <color name="dark_primary_color">#23339A</color>
     <color name="light_primary_color">#C5CAE9</color>
     <color name="accent_color">#607D8B</color>
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#757575</color>
     <color name="divider_color">#757575</color>
+    <color name="green">#028C02</color>
 </resources>
