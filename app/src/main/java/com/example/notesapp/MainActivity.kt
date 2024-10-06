@@ -1,12 +1,11 @@
 package com.example.notesapp
 
 import android.content.Intent
-import android.icu.text.Transliterator.Position
 import android.os.Bundle
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -20,16 +19,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dialog: AlertDialog
     private lateinit var adapter: NoteViewAdapter
     private lateinit var resultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var db: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val db = AppDatabase(this)
+        db = AppDatabase(this)
 
         // Configuring the Recycler View
-        adapter = NoteViewAdapter(db.getAllData(), this ,
+        adapter = NoteViewAdapter(db.getAllData(), this,
             object : OnItemClickListener {
                 override fun onItemClick(position: Int) {
                     val noteClicked = adapter.getNote(position)
@@ -39,15 +39,16 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onItemLongClick(position: Int) {
-                    Toast.makeText(applicationContext, "Item long clicked $position", Toast.LENGTH_SHORT).show()
+                    showDeleteDialog(position)
                 }
             })
-        resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (it.resultCode == 1) {
-                adapter.refreshData(db.getAllData())
-                Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
+        resultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                if (it.resultCode == 1) {
+                    adapter.refreshData(db.getAllData())
+                    Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
 
         val layoutManager = StaggeredGridLayoutManager(
             2,
@@ -77,7 +78,8 @@ class MainActivity : AppCompatActivity() {
                 val title = etTitle.text.toString()
                 val content = etContent.text.toString()
                 if (title.isBlank() && content.isBlank()) {
-                    Toast.makeText(this, "Please enter a title and content", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Please enter a title and content", Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     val addToDB = db.insertData(title, content)
                     if (addToDB == -1L) {
@@ -94,10 +96,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun goToNoteActivity(position: Int) {
-        val note = adapter.getNote(position)
-        val intent = Intent(this, NoteActivity::class.java)
-        intent.putExtra("extraNote", note)
-        startActivity(intent)
+    private fun showDeleteDialog(position: Int) {
+        val builder = AlertDialog.Builder(this, R.style.dialog_rounded)
+        val view = layoutInflater.inflate(R.layout.delete_note_dialog, null)
+        builder.setView(view)
+
+        val btnCancel = view.findViewById<Button>(R.id.btnCancel)
+        val btnDelete = view.findViewById<Button>(R.id.btnDelete)
+        val dialog = builder.create()
+
+        btnDelete.setOnClickListener {
+            val note = adapter.getNote(position)
+            db.deleteNote(note.id)
+            adapter.refreshData(db.getAllData())
+            dialog.dismiss()
+        }
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 }
